@@ -15,7 +15,7 @@ app.config.from_pyfile(os.environ['CONFIG_FILE'], silent=True)
 
 @app.route('/')
 def hello_world():
-    return 'Hello, {}!, today is {}'.format(app.config['WHO'], os.environ.get('MESSAGE', 'sunny :)'))
+    return 'Hello, {}!, today it is {}'.format(app.config['WHO'], os.environ.get('MESSAGE', 'sunny :)'))
 
 
 def main():
