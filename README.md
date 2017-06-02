@@ -6,8 +6,8 @@ Minimum example of Docker + OpenShift deployment
 ```sh
 git clone https://github.com/mvidalgarcia/dockershift-playground.git
 cd dockershift-playground
-export FLASK_APP=hello.py
-flask run -p 8000
+export FLASK_APP=app/hello.py
+flask run
 ```
 
 ### Docker
