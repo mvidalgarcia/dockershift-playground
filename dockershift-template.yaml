@@ -1,0 +1,273 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: dockershift-template
+objects:
+
+
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      compose: dockershift-playground
+    name: dockershift
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: dockershift:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      git:
+        ref: master
+        uri: https://github.com/mvidalgarcia/dockershift-playground.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        from:
+          kind: ImageStreamTag
+          name: dockershift:from
+      type: Docker
+    triggers:
+    - github:
+        secret: 7PrUZEUMIszyJ8VpVk_6
+      type: GitHub
+    - generic:
+        secret: OuLoPsMg87O6nevGn9KY
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+
+
+- apiVersion: v1
+  kind: Build
+  metadata:
+    annotations:
+      openshift.io/build-config.name: dockershift
+      openshift.io/build.number: "1"
+      openshift.io/build.pod-name: dockershift-1-build
+    creationTimestamp: null
+    labels:
+      buildconfig: dockershift
+      compose: dockershift-playground
+      openshift.io/build-config.name: dockershift
+      openshift.io/build.start-policy: Serial
+    name: dockershift-1
+  spec:
+    nodeSelector: null
+    output:
+      pushSecret:
+        name: builder-dockercfg-zqf0n
+      to:
+        kind: ImageStreamTag
+        name: dockershift:latest
+    postCommit: {}
+    resources: {}
+    revision:
+      git:
+        author:
+          email: marco.vidal@cern.ch
+          name: Marco Vidal Garcia
+        commit: 0d68a893d6fdf8d21b40a71f70e5ff9748c43df6
+        committer:
+          email: marco.vidal@cern.ch
+          name: Marco Vidal Garcia
+        message: Add Docker support
+      type: Git
+    serviceAccount: builder
+    source:
+      git:
+        ref: master
+        uri: https://github.com/mvidalgarcia/dockershift-playground.git
+      type: Git
+    strategy:
+      dockerStrategy:
+        from:
+          kind: DockerImage
+          name: centos@sha256:bba1de7c9d900a898e3cadbae040dfe8a633c06bc104a0df76ae24483e03c077
+      type: Docker
+    triggeredBy:
+    - imageChangeBuild:
+        fromRef:
+          kind: ImageStreamTag
+          name: dockershift:from
+        imageID: centos@sha256:bba1de7c9d900a898e3cadbae040dfe8a633c06bc104a0df76ae24483e03c077
+      message: Image change
+  status:
+    config:
+      name: dockershift
+    output:
+      to:
+        imageDigest: sha256:97236ab7bde7aae2d87c339b68c572f57880fe8d2afcf7f3e6b1ad9f0ee4e91e
+    outputDockerImageReference: 172.30.1.1:5000/myproject/dockershift:latest
+    phase: New
+
+
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/image.dockerRepositoryCheck: 2017-06-02T13:41:54Z
+    creationTimestamp: null
+    generation: 2
+    labels:
+      compose: dockershift-playground
+    name: dockershift
+  spec:
+    tags:
+    - annotations:
+        openshift.io/imported-from: centos:7
+      from:
+        kind: DockerImage
+        name: 172.30.1.1:5000/myproject/dockershift:from
+      generation: 2
+      importPolicy: {}
+      name: from
+      referencePolicy:
+        type: Source
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: 172.30.1.1:5000/myproject/dockershift:latest
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
+  status:
+    dockerImageRepository: ""
+
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    creationTimestamp: null
+    generation: 1
+    labels:
+      compose: dockershift-playground
+    name: dockershift
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: dockershift
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          deploymentconfig: dockershift
+      spec:
+        containers:
+        - env:
+          - name: CONFIG_FILE
+            value: /opt/dockershift/settings/hello.cfg
+          image: 172.30.1.1:5000/myproject/dockershift@sha256:97236ab7bde7aae2d87c339b68c572f57880fe8d2afcf7f3e6b1ad9f0ee4e91e
+          imagePullPolicy: Always
+          name: dockershift
+          ports:
+          - containerPort: 8000
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /opt/dockershift/settings
+            name: volume-4s36p
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            items:
+            - key: hello.cfg
+              path: hello.cfg
+            name: settings
+          name: volume-4s36p
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - dockershift
+        from:
+          kind: ImageStreamTag
+          name: dockershift:latest
+          namespace: myproject
+      type: ImageChange
+  status:
+    availableReplicas: 0
+    latestVersion: 0
+    observedGeneration: 0
+    replicas: 0
+    unavailableReplicas: 0
+    updatedReplicas: 0
+
+
+
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      openshift.io/host.generated: "true"
+    creationTimestamp: null
+    name: dockershift
+  spec:
+    host: dockershift-myproject.128.141.210.251.xip.io
+    port:
+      targetPort: 8000-tcp
+    tls:
+      termination: edge
+    to:
+      kind: Service
+      name: dockershift
+      weight: 100
+    wildcardPolicy: None
+  status:
+    ingress:
+    - conditions:
+      - lastTransitionTime: 2017-06-02T13:44:20Z
+        status: "True"
+        type: Admitted
+      host: dockershift-myproject.128.141.210.251.xip.io
+      routerName: router
+      wildcardPolicy: None
+
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: null
+    labels:
+      compose: dockershift-playground
+    name: dockershift
+  spec:
+    ports:
+    - name: 8000-tcp
+      port: 8000
+      protocol: TCP
+      targetPort: 8000
+    selector:
+      deploymentconfig: dockershift
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
