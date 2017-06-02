@@ -19,7 +19,7 @@ def hello_world():
 
 
 def main():
-    app.run(port=8000)
+    app.run(port=8000, host='0.0.0.0')
 
 
 main()
