@@ -35,10 +35,10 @@ objects:
       type: Docker
     triggers:
     - github:
-        secret: 7PrUZEUMIszyJ8VpVk_6
+        secret: mLVCznZo0DGUBL8ZJrdq
       type: GitHub
     - generic:
-        secret: OuLoPsMg87O6nevGn9KY
+        secret: nw331IoynmYPweaBWaV5
       type: Generic
     - type: ConfigChange
     - imageChange: {}
@@ -65,7 +65,7 @@ objects:
     nodeSelector: null
     output:
       pushSecret:
-        name: builder-dockercfg-zqf0n
+        name: builder-dockercfg-qjqpb
       to:
         kind: ImageStreamTag
         name: dockershift:latest
@@ -76,11 +76,11 @@ objects:
         author:
           email: marco.vidal@cern.ch
           name: Marco Vidal Garcia
-        commit: 0d68a893d6fdf8d21b40a71f70e5ff9748c43df6
+        commit: cc09480a8b9b1301991da62e380621679a06b8cb
         committer:
           email: marco.vidal@cern.ch
           name: Marco Vidal Garcia
-        message: Add Docker support
+        message: Add support for OpenShift
       type: Git
     serviceAccount: builder
     source:
@@ -106,7 +106,7 @@ objects:
       name: dockershift
     output:
       to:
-        imageDigest: sha256:97236ab7bde7aae2d87c339b68c572f57880fe8d2afcf7f3e6b1ad9f0ee4e91e
+        imageDigest: sha256:95f3accdeb44893631cb5c7ee3052bd89ddc4776d3293b068c292b39af1d8de9
     outputDockerImageReference: 172.30.1.1:5000/myproject/dockershift:latest
     phase: New
 
@@ -115,7 +115,7 @@ objects:
   kind: ImageStream
   metadata:
     annotations:
-      openshift.io/image.dockerRepositoryCheck: 2017-06-02T13:41:54Z
+      openshift.io/image.dockerRepositoryCheck: 2017-06-02T14:50:26Z
     creationTimestamp: null
     generation: 2
     labels:
@@ -178,7 +178,7 @@ objects:
         - env:
           - name: CONFIG_FILE
             value: /opt/dockershift/settings/hello.cfg
-          image: 172.30.1.1:5000/myproject/dockershift@sha256:97236ab7bde7aae2d87c339b68c572f57880fe8d2afcf7f3e6b1ad9f0ee4e91e
+          image: 172.30.1.1:5000/myproject/dockershift@sha256:95f3accdeb44893631cb5c7ee3052bd89ddc4776d3293b068c292b39af1d8de9
           imagePullPolicy: Always
           name: dockershift
           ports:
@@ -188,7 +188,7 @@ objects:
           terminationMessagePath: /dev/termination-log
           volumeMounts:
           - mountPath: /opt/dockershift/settings
-            name: volume-4s36p
+            name: volume-7t76o
         dnsPolicy: ClusterFirst
         restartPolicy: Always
         securityContext: {}
@@ -197,10 +197,10 @@ objects:
         - configMap:
             defaultMode: 420
             items:
-            - key: hello.cfg
+            - key: conf_key
               path: hello.cfg
             name: settings
-          name: volume-4s36p
+          name: volume-7t76o
     test: false
     triggers:
     - type: ConfigChange
@@ -222,7 +222,6 @@ objects:
     updatedReplicas: 0
 
 
-
 - apiVersion: v1
   kind: Route
   metadata:
@@ -234,8 +233,6 @@ objects:
     host: dockershift-myproject.128.141.210.251.xip.io
     port:
       targetPort: 8000-tcp
-    tls:
-      termination: edge
     to:
       kind: Service
       name: dockershift
@@ -244,14 +241,12 @@ objects:
   status:
     ingress:
     - conditions:
-      - lastTransitionTime: 2017-06-02T13:44:20Z
+      - lastTransitionTime: 2017-06-02T15:02:50Z
         status: "True"
         type: Admitted
       host: dockershift-myproject.128.141.210.251.xip.io
       routerName: router
       wildcardPolicy: None
-
-
 - apiVersion: v1
   kind: Service
   metadata:
